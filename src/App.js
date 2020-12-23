@@ -8,6 +8,7 @@ import { fromLonLat, toLonLat, get } from "ol/proj";
 import GeoJSON from "ol/format/GeoJSON";
 import { Controls, FullScreenControl, MousePositionControl } from "./Controls";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "reactstrap";
+import { createStringXY } from "ol/coordinate";
 
 let styles = {
   Point: new Style({
@@ -149,7 +150,17 @@ const App = () => {
         </Layers>
         <Controls>
           <FullScreenControl />
-          <MousePositionControl />
+          <MousePositionControl
+            options={{
+              coordinateFormat: createStringXY(4),
+              projection: "EPSG:4326",
+              // comment the following two lines to have the mouse position
+              // be placed within the map.
+              className: "custom-mouse-position",
+              target: document.getElementById("mouse-position"),
+              undefinedHTML: "&nbsp;",
+            }}
+          />
         </Controls>
       </Map>
       <div>
