@@ -1,49 +1,58 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import "./Map.css";
 import MapContext from "./MapContext";
 import * as ol from "ol";
 
-const Map = ({ children, zoom, center }) => {
-	const mapRef = useRef();
-	const [map, setMap] = useState(null);
+const Map = ({ children, zoom, center, click }) => {
+  const mapRef = useRef();
+  const [map, setMap] = useState(null);
 
-	// on component mount
-	useEffect(() => {
-		let options = {
-			view: new ol.View({ zoom, center }),
-			layers: [],
-			controls: [],
-			overlays: []
-		};
+  // on component mount
+  useEffect(() => {
+    let options = {
+      view: new ol.View({ zoom, center }),
+      layers: [],
+      controls: [],
+      overlays: [],
+    };
 
-		let mapObject = new ol.Map(options);
-		mapObject.setTarget(mapRef.current);
-		setMap(mapObject);
+    let mapObject = new ol.Map(options);
+    mapObject.setTarget(mapRef.current);
+    setMap(mapObject);
 
-		return () => mapObject.setTarget(undefined);
-	}, []);
+    mapObject.on("click", click);
 
-	// zoom change handler
-	useEffect(() => {
-		if (!map) return;
+    return () => mapObject.setTarget(undefined);
+  }, [zoom, center, click]);
 
-		map.getView().setZoom(zoom);
-	}, [zoom]);
+  // zoom change handler
+  useEffect(() => {
+    if (!map) return;
 
-	// center change handler
-	useEffect(() => {
-		if (!map) return;
+    map.getView().setZoom(zoom);
+  }, [map, zoom]);
 
-		map.getView().setCenter(center)
-	}, [center])
+  // center change handler
+  useEffect(() => {
+    if (!map) return;
 
-	return (
-		<MapContext.Provider value={{ map }}>
-			<div ref={mapRef} className="ol-map">
-				{children}
-			</div>
-		</MapContext.Provider>
-	)
-}
+    map.getView().setCenter(center);
+  }, [map, center]);
+
+  return (
+    <MapContext.Provider value={{ map }}>
+      <div ref={mapRef} className="ol-map">
+        {children}
+      </div>
+    </MapContext.Provider>
+  );
+};
+
+Map.propTypes = {
+  zoom: PropTypes.number.isRequired,
+  center: PropTypes.arrayOf(PropTypes.number).isRequired,
+  click: PropTypes.func,
+};
 
 export default Map;
