@@ -7,6 +7,7 @@ import { osm, vector } from "./Source";
 import { fromLonLat, toLonLat, get } from "ol/proj";
 import GeoJSON from "ol/format/GeoJSON";
 import { Controls, FullScreenControl, MousePositionControl } from "./Controls";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "reactstrap";
 
 let styles = {
   Point: new Style({
@@ -111,9 +112,13 @@ const App = () => {
   const zoom = 9;
   const [showLayer1, setShowLayer1] = useState(true);
   const [showLayer2, setShowLayer2] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [lonlat, setLonlat] = useState(center);
 
   const clickHandler = (e) => {
-    alert(toLonLat(e.coordinate));
+    e.stopPropagation();
+    setLonlat(toLonLat(e.coordinate));
+    setShowDialog(true);
   };
 
   return (
@@ -163,6 +168,19 @@ const App = () => {
         />
         Wyandotte County
       </div>
+      <Modal isOpen={showDialog}>
+        <ModalHeader>Coordinate</ModalHeader>
+        <ModalBody>{`Longitude: ${lonlat[0]}, Latitude: ${lonlat[1]}`}</ModalBody>
+        <ModalFooter>
+          <Button
+            size="sm"
+            color="secondary"
+            onClick={() => setShowDialog(false)}
+          >
+            Close
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };
