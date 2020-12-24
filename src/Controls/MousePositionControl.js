@@ -17,7 +17,7 @@ const MousePositionControl = ({ options, events }) => {
     }
 
     return () => map.controls.remove(mousePositionControl);
-  }, [map, options, events]);
+  }, [map]);
 
   return null;
 };
