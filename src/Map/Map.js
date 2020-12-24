@@ -24,6 +24,7 @@ const Map = ({ children, zoom, center, click }) => {
     mapObject.on("click", click);
 
     return () => mapObject.setTarget(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
