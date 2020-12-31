@@ -16,7 +16,8 @@ import {
   Label,
 } from "reactstrap";
 import { createStringXY } from "ol/coordinate";
-import { styles } from "./Source/Constants";
+import { Style, Icon } from "ol/style";
+//import { styles } from "./Source/Constants";
 import MaterialCard from "./Source/MaterialCard";
 import UIHeader from "./UIHeader";
 import { FormInput } from "./FormInputs";
@@ -101,13 +102,23 @@ const SetPoint = ({
       ],
     });
 
-    const style = styles.Point;
+    const style = new Style({
+      image: new Icon({
+        anchor: [0.5, 46],
+        anchorXUnits: "fraction",
+        anchorYUnits: "pixels",
+        color: name === "start" ? "rgba(255, 0, 0, .5)" : "rgba(0, 0, 255, .5)",
+        src: "https://openlayers.org/en/latest/examples/data/icon.png",
+      }),
+    });
+
     const vectorLayer = new OLVectorLayer({
       source,
       style,
     });
 
     vectorLayer.set("name", name);
+    vectorLayer.set("coordinate", e.coordinate);
 
     map.addLayer(vectorLayer);
   };
@@ -124,7 +135,8 @@ const SetPoint = ({
   return (
     <>
       <ModalBody>
-        {`Longitude: ${lonlat[0]}, Latitude: ${lonlat[1]}, Name: ${name}`}
+        <h3>Add {name} point</h3>
+        {`Longitude: ${lonlat[0]}, Latitude: ${lonlat[1]}`}
         <div ref={mapRef} className="ol-map"></div>
       </ModalBody>
       <ModalFooter>
@@ -151,14 +163,34 @@ const SetPoint = ({
   );
 };
 
-const AddLineWizard = ({ map, isOpen, toggle, center }) => {
-  const [wizardState, setWizardState] = useState(WIZARD_STATE.SEARCH);
+const getLine = (map) => {
+  if (!map) return;
 
+  let line = {};
+
+  let layers = map.getLayers().getArray();
+  const len = layers.length - 1;
+  for (let i = len; i >= 0; i--) {
+    const layer = layers[i];
+
+    const name = layer.get("name");
+    const coordinate = layer.get("coordinate");
+    if (name === "start" || name === "end") {
+      line[name] = coordinate;
+    }
+  }
+
+  return line;
+};
+
+const AddLineWizard = ({ map, isOpen, toggle, center, setLine }) => {
+  const [wizardState, setWizardState] = useState(WIZARD_STATE.SEARCH);
   const renderState = () => {
     switch (wizardState) {
-      default:
+      default: {
         return <Search setWizardState={setWizardState} toggle={toggle} />;
-      case WIZARD_STATE.SET_START:
+      }
+      case WIZARD_STATE.SET_START: {
         return (
           <SetPoint
             setWizardState={setWizardState}
@@ -169,7 +201,8 @@ const AddLineWizard = ({ map, isOpen, toggle, center }) => {
             postState={WIZARD_STATE.SET_END}
           />
         );
-      case WIZARD_STATE.SET_END:
+      }
+      case WIZARD_STATE.SET_END: {
         return (
           <SetPoint
             setWizardState={setWizardState}
@@ -180,7 +213,9 @@ const AddLineWizard = ({ map, isOpen, toggle, center }) => {
             postState={WIZARD_STATE.FINISH}
           />
         );
+      }
       case WIZARD_STATE.FINISH: {
+        setLine(getLine(map));
         toggle();
         return <></>;
       }
@@ -200,14 +235,13 @@ const AddLineWizard = ({ map, isOpen, toggle, center }) => {
   );
 };
 
-const lines = [];
-
 const App = () => {
   const zoom = 9;
 
   const [isOpen, setIsOpen] = useState(false);
   const [map, setMap] = useState();
   const center = [-94.9065, 38.9884];
+  const [line, setLine] = useState(null);
 
   // on component mount
   useEffect(() => {
@@ -258,7 +292,7 @@ const App = () => {
     <>
       <Container>
         <MaterialCard>
-          <UIHeader>Add Lines from Map</UIHeader>
+          <UIHeader>Add Line from Map</UIHeader>
         </MaterialCard>
         <Row>
           <Col>
@@ -275,11 +309,8 @@ const App = () => {
           </Col>
         </Row>
         <MaterialCard>
-          <table>
-            {lines.map((line, index) => {
-              return <tr key={index}>row({index})</tr>;
-            })}
-          </table>
+          {line &&
+            `Start: [${line.start[0]}, ${line.start[1]}], End: [${line.end[0]}, ${line.end[1]}]`}
         </MaterialCard>
       </Container>
       {isOpen && (
@@ -288,6 +319,7 @@ const App = () => {
           toggle={handleClose}
           map={map}
           center={center}
+          setLine={setLine}
         />
       )}
     </>
